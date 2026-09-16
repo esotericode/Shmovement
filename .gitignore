@@ -1,0 +1,7 @@
+# Godot's generated import cache and editor state
+.godot/
+*.tmp
+*.bak
+build/
+test-results/
+.DS_Store

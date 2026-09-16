@@ -1,0 +1,100 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/reference_profile.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/character_visual.gd" id="3"]
+
+[sub_resource type="CapsuleShape3D" id="Collision"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="BodyMaterial"]
+albedo_color = Color(0.13, 0.37, 0.40, 1)
+roughness = 0.58
+
+[sub_resource type="StandardMaterial3D" id="FootMaterial"]
+albedo_color = Color(1, 0.48, 0.22, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="FaceMaterial"]
+albedo_color = Color(0.92, 0.96, 0.85, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="EyeMaterial"]
+albedo_color = Color(0.025, 0.055, 0.065, 1)
+roughness = 0.4
+
+[sub_resource type="CapsuleMesh" id="BodyMesh"]
+material = SubResource("BodyMaterial")
+radius = 0.44
+height = 1.45
+radial_segments = 24
+rings = 8
+
+[sub_resource type="BoxMesh" id="FootMesh"]
+material = SubResource("FootMaterial")
+size = Vector3(0.31, 0.27, 0.58)
+
+[sub_resource type="SphereMesh" id="FaceMesh"]
+material = SubResource("FaceMaterial")
+radius = 0.31
+height = 0.62
+radial_segments = 20
+rings = 12
+
+[sub_resource type="SphereMesh" id="EyeMesh"]
+material = SubResource("EyeMaterial")
+radius = 0.055
+height = 0.11
+radial_segments = 12
+rings = 6
+
+[sub_resource type="CylinderMesh" id="BadgeMesh"]
+material = SubResource("FootMaterial")
+top_radius = 0.10
+bottom_radius = 0.10
+height = 0.03
+radial_segments = 16
+
+[node name="Player" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1")
+profile = ExtResource("2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("Collision")
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("3")
+
+[node name="Body" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0, 1.055, 0)
+mesh = SubResource("BodyMesh")
+
+[node name="Face" type="MeshInstance3D" parent="Visual/Body"]
+position = Vector3(0, 0.22, -0.31)
+scale = Vector3(1, 0.74, 0.44)
+mesh = SubResource("FaceMesh")
+
+[node name="LeftEye" type="MeshInstance3D" parent="Visual/Body"]
+position = Vector3(-0.115, 0.235, -0.445)
+mesh = SubResource("EyeMesh")
+
+[node name="RightEye" type="MeshInstance3D" parent="Visual/Body"]
+position = Vector3(0.115, 0.235, -0.445)
+mesh = SubResource("EyeMesh")
+
+[node name="Badge" type="MeshInstance3D" parent="Visual/Body"]
+position = Vector3(0, -0.23, -0.425)
+rotation = Vector3(1.570796, 0, 0)
+mesh = SubResource("BadgeMesh")
+
+[node name="LeftFoot" type="MeshInstance3D" parent="Visual"]
+position = Vector3(-0.245, 0.15, -0.12)
+mesh = SubResource("FootMesh")
+
+[node name="RightFoot" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0.245, 0.15, -0.12)
+mesh = SubResource("FootMesh")
