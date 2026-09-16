@@ -35,6 +35,7 @@ var _recording: bool = false
 var _jump_origin: Vector3
 var _air_ticks: int = 0
 var _jump_edge: bool = false
+var _attack_edge: bool = false
 var _respawn_pending: bool = false
 
 func _ready() -> void:
@@ -52,6 +53,8 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if input_enabled and event.is_action_pressed("jump") and not event.is_echo():
 		_jump_edge = true
+	if input_enabled and event.is_action_pressed("attack") and not event.is_echo():
+		_attack_edge = true
 
 func _physics_process(_delta: float) -> void:
 	var controls: Dictionary = _read_controls()
@@ -63,6 +66,7 @@ func _physics_process(_delta: float) -> void:
 	_respawn_pending = false
 	core.grounded = was_grounded
 	core.floor_normal = get_floor_normal() if was_grounded else Vector3.UP
+	core.floor_class = _floor_class() if was_grounded else 0
 	core.assists = assists_enabled
 	_apply_assists(controls, was_grounded)
 	var frame_motion: Vector3 = core.begin_tick(controls)
@@ -128,16 +132,21 @@ func _read_controls() -> Dictionary:
 	if not input_override.is_empty():
 		var controls: Dictionary = input_override.duplicate()
 		input_override["pressed"] = false
+		input_override["attack"] = false
 		_jump_edge = false
+		_attack_edge = false
 		return controls
 	if not input_enabled:
 		_jump_edge = false
+		_attack_edge = false
 		return {"move": Vector2.ZERO, "pressed": false, "held": false, "crouch": false}
 	var pressed: bool = _jump_edge or Input.is_action_just_pressed("jump")
+	var attack: bool = _attack_edge or Input.is_action_just_pressed("attack")
 	_jump_edge = false
+	_attack_edge = false
 	return {
 		"move": Input.get_vector("move_left", "move_right", "move_forward", "move_back"),
-		"pressed": pressed, "held": Input.is_action_pressed("jump"),
+		"pressed": pressed, "held": Input.is_action_pressed("jump"), "attack": attack,
 		"crouch": Input.is_action_pressed("crouch")
 	}
 
@@ -152,9 +161,19 @@ func respawn(at: Vector3 = Vector3.INF) -> void:
 	_coyote_ticks = 0
 	_recording = false
 	_jump_edge = false
+	_attack_edge = false
 	_respawn_pending = true
 	current_jump_height = 0.0
 	reset_physics_interpolation()
+
+func _floor_class() -> int:
+	for index in get_slide_collision_count():
+		var collision := get_slide_collision(index)
+		if collision.get_normal().dot(Vector3.UP) >= cos(floor_max_angle):
+			var collider: Object = collision.get_collider()
+			if collider != null:
+				return clampi(int(collider.get_meta("floor_class", 0)), 0, 3)
+	return 0
 
 func restore_defaults() -> void:
 	settings = profile.duplicate(true) if profile != null else MovementProfile.new()

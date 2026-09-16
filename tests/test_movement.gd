@@ -145,6 +145,7 @@ func _run() -> void:
 		_check((player.jump_kind == ShmovementPlayer.JumpKind.WALL) == (delay == 5), "Engine wall timing boundary at tick %d" % delay)
 	wall.queue_free()
 	await _ticks(2)
+	await _dive_checks()
 
 	for assisted in [false, true]:
 		await _reset(Vector3(120, 3.54, -10))
@@ -183,6 +184,53 @@ func _run() -> void:
 	print("MEASUREMENTS ", JSON.stringify(measurements))
 	print("RESULT: %d/%d checks passed" % [checks - failures, checks])
 	quit(1 if failures > 0 else 0)
+
+func _dive_checks() -> void:
+	await _reset()
+	_controls(Vector2(0, -1))
+	await _ticks(90)
+	player.input_override["attack"] = true
+	await _ticks(1)
+	_check(player.core.action == MovementCore.Action.DIVE and player.core.launch_vertical == 20.0, "Ground attack at speed launches the original low dive")
+	_check(player.core.launch_forward > 44.0 and player.core.launch_forward <= 48.0, "Dive adds fifteen native speed units with a 48-unit entry cap")
+	await _flight()
+	_check(player.core.action == MovementCore.Action.DIVE_SLIDE, "Real floor contact transitions dive into belly slide")
+	var slide_start: Vector3 = player.position
+	_controls()
+	await _ticks(5)
+	_check(player.core.action == MovementCore.Action.DIVE_SLIDE and player.position.distance_to(slide_start) > 1.0, "Belly slide carries momentum after landing")
+	player.input_override["attack"] = true
+	await _ticks(1)
+	_check(player.core.action == MovementCore.Action.FORWARD_ROLLOUT and player.core.launch_vertical == 30.0, "Attack rolls out of a slide with the source vertical speed")
+	await _flight()
+	_check(player.core.action == MovementCore.Action.ROLLOUT_LAND, "Rollout uses its own landing stop")
+	await _reset()
+	_controls(Vector2.ZERO, true, true)
+	await _ticks(2)
+	player.input_override["attack"] = true
+	await _ticks(1)
+	_check(player.core.action == MovementCore.Action.JUMP_KICK, "Slow ordinary airborne attack kicks instead of incorrectly diving")
+	await _reset()
+	_controls(Vector2(0, -1))
+	await _ticks(90)
+	_controls(Vector2(0, 1))
+	await _ticks(1)
+	_controls(Vector2(0, 1), true, true)
+	await _ticks(2)
+	var up: float = player.core.vertical_velocity
+	player.input_override["attack"] = true
+	await _ticks(1)
+	_check(player.core.action == MovementCore.Action.DIVE and is_equal_approx(player.core.vertical_velocity, up - 4.0), "Side-flip dive preserves ascent instead of adding a jump impulse")
+	await _reset()
+	_controls(Vector2(0, -1))
+	await _ticks(90)
+	_controls(Vector2(0, -1), false, false, true)
+	await _ticks(1)
+	_controls(Vector2(0, -1), true, true, true)
+	await _ticks(1)
+	player.input_override["attack"] = true
+	await _ticks(1)
+	_check(player.core.action == MovementCore.Action.LONG_JUMP, "Attack cannot cancel a long jump into a dive")
 
 
 func _ticks(count: int) -> void:

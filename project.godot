@@ -26,6 +26,11 @@ anti_aliasing/quality/msaa_3d=1
 
 [input]
 
+attack={
+"deadzone": 0.18,
+"events": [Object(InputEventKey,"physical_keycode":69), Object(InputEventJoypadButton,"button_index":2)]
+}
+
 move_left={
 "deadzone": 0.18,
 "events": [Object(InputEventKey,"physical_keycode":65), Object(InputEventJoypadMotion,"axis":0,"axis_value":-1.0)]

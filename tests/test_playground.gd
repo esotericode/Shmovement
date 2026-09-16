@@ -59,13 +59,13 @@ func _run() -> void:
 	var slope: float = rad_to_deg(acos(clampf(player.get_floor_normal().y, -1.0, 1.0)))
 	_check(slope > 20.0 and slope < 24.0, "Ramp is detected as a 22 degree floor")
 
-	player.respawn(Vector3(20.8, 0.04, 0))
+	player.respawn(Vector3(58.8, 0.04, 0))
 	player.input_override["move"] = Vector2.ZERO
 	rig.snap_to_target()
 	rig.rotation.y = PI / 2.0
 	await _ticks(20)
 	_check(arm.get_hit_length() < 2.0, "Camera retracts against the room wall")
-	_check(arm.get_node("Camera3D").global_position.x < 21.8, "Camera stays inside the wall")
+	_check(arm.get_node("Camera3D").global_position.x < 59.8, "Camera stays inside the wall")
 
 	player.respawn(Vector3(13, 1.04, 12))
 	await _ticks(6)
@@ -85,6 +85,43 @@ func _run() -> void:
 			break
 	print("Gap landing: ", player.position)
 	_check(player.is_on_floor() and player.position.y > 0.95 and player.position.z < -2.5, "Long jump clears the seven metre gap onto the landing island")
+	player.input_override = {"move": Vector2.ZERO, "pressed": false, "held": false, "crouch": false}
+	for station in 5:
+		world.visit_station(station)
+		await _ticks(16)
+		_check(player.is_on_floor(), "Practice station %d has a safe grounded spawn" % (station + 1))
+		_check(rig.global_position.distance_to(player.global_position) < 3.0, "Station %d resets the following camera" % (station + 1))
+	world.visit_station(1)
+	await _ticks(16)
+	_check(player.core.floor_class == 1, "Slippery runway metadata reaches the movement core")
+	player.input_override["move"] = Vector2(0, -1)
+	await _ticks(90)
+	player.input_override["attack"] = true
+	await _ticks(1)
+	_check(player.core.action == MovementCore.Action.DIVE, "Course runway allows a full-speed ground dive")
+	for i in 90:
+		await _ticks(1)
+		if player.core.action == MovementCore.Action.DIVE_SLIDE:
+			break
+	_check(player.core.action == MovementCore.Action.DIVE_SLIDE, "Dive lands into a belly slide on the actual runway")
+	await _ticks(2)
+	_check(player.core.floor_class == 1, "Runway sliding retains the correct surface class")
+	player.input_override["pressed"] = true
+	await _ticks(1)
+	_check(player.core.action == MovementCore.Action.FORWARD_ROLLOUT, "Jump recovers from a runway slide with a forward roll")
+	_check((world.get_node("Room/TowerLeft").get_child(0).shape as BoxShape3D).size.y == 24.0, "Wall tower has real collision at 24 metres")
+	world.visit_station(3)
+	await _ticks(16)
+	player.input_override["move"] = Vector2(0, -1)
+	await _ticks(4)
+	player.input_override["pressed"] = true
+	player.input_override["held"] = true
+	await _ticks(1)
+	for i in 70:
+		await _ticks(1)
+		if player.is_on_floor():
+			break
+	_check(player.is_on_floor() and player.position.y > 0.95, "Jump course's first raised platform is reachable")
 	print("RESULT: %d/%d playground checks passed" % [count - failures, count])
 	quit(1 if failures > 0 else 0)
 

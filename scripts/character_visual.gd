@@ -69,7 +69,7 @@ func _process(delta: float) -> void:
 	match state.action:
 		MovementCore.Action.WALKING, MovementCore.Action.DECELERATING:
 			_sample("run", fmod(_clip_time * clampf(absf(_player.forward_speed) / 6.0, 0.35, 1.8), 2.0 / 3.0))
-		MovementCore.Action.IDLE, MovementCore.Action.LAND_STOP:
+		MovementCore.Action.IDLE, MovementCore.Action.LAND_STOP, MovementCore.Action.ROLLOUT_LAND:
 			_sample("idle", fmod(_clip_time, 32.0 / 30.0))
 		MovementCore.Action.TURNING_AROUND, MovementCore.Action.FINISH_TURNING_AROUND, MovementCore.Action.BRAKING:
 			_base_pose()
@@ -114,7 +114,39 @@ func _process(delta: float) -> void:
 			_bend("LeftArm", Vector3.RIGHT, -70)
 			_bend("RightArm", Vector3.RIGHT, 75)
 			_pivot.rotation.x = -0.15
-		MovementCore.Action.AIR_HIT_WALL, MovementCore.Action.SOFT_BONK, MovementCore.Action.HARD_BONK:
+		MovementCore.Action.DIVE, MovementCore.Action.DIVE_SLIDE, MovementCore.Action.STOMACH_SLIDE_STOP:
+			_base_pose()
+			var recovery: float = smoothstep(4.0, 37.0, float(state.animation_frame)) if state.action == MovementCore.Action.STOMACH_SLIDE_STOP else 0.0
+			var extension: float = 1.0 - recovery
+			_bend("LeftArm", Vector3.RIGHT, 155 * extension)
+			_bend("RightArm", Vector3.RIGHT, 155 * extension)
+			_bend("LeftForeArm", Vector3.RIGHT, 12)
+			_bend("RightForeArm", Vector3.RIGHT, 12)
+			_bend("LeftLeg", Vector3.RIGHT, -18 * extension)
+			_bend("RightLeg", Vector3.RIGHT, -25 * extension)
+			_pivot.rotation.x = -PI / 2.0 * extension
+			if state.action == MovementCore.Action.DIVE:
+				_pivot.rotation.x += float(state.dive_pitch) * TAU / 65536.0
+			else:
+				_pivot.position.y = lerpf(0.4, 0.9, recovery)
+		MovementCore.Action.FORWARD_ROLLOUT, MovementCore.Action.BACKWARD_ROLLOUT:
+			_base_pose()
+			_bend("LeftUpLeg", Vector3.RIGHT, 100)
+			_bend("RightUpLeg", Vector3.RIGHT, 100)
+			_bend("LeftLeg", Vector3.RIGHT, -120)
+			_bend("RightLeg", Vector3.RIGHT, -120)
+			_bend("LeftArm", Vector3.RIGHT, 65)
+			_bend("RightArm", Vector3.RIGHT, 65)
+			_pivot.rotation.x = TAU * smoothstep(0, 10, frame) * (-1.0 if state.action == MovementCore.Action.FORWARD_ROLLOUT else 1.0)
+		MovementCore.Action.JUMP_KICK, MovementCore.Action.PUNCH:
+			_base_pose()
+			_bend("RightArm", Vector3.RIGHT, 85)
+			_bend("LeftArm", Vector3.RIGHT, 40)
+			if state.action == MovementCore.Action.JUMP_KICK:
+				_bend("RightUpLeg", Vector3.RIGHT, 85)
+				_bend("LeftUpLeg", Vector3.RIGHT, 30)
+				_bend("LeftLeg", Vector3.RIGHT, -65)
+		MovementCore.Action.AIR_HIT_WALL, MovementCore.Action.SOFT_BONK, MovementCore.Action.HARD_BONK, MovementCore.Action.GROUND_BONK:
 			_base_pose()
 			_bend("LeftArm", Vector3.RIGHT, 90)
 			_bend("RightArm", Vector3.RIGHT, 90)

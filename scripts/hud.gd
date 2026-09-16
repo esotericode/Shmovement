@@ -43,9 +43,9 @@ func _ready() -> void:
 	title_box.add_theme_constant_override("separation", 6)
 	title.add_child(title_box)
 	title_box.add_child(_label("S H M O V E M E N T", 27, PAPER))
-	title_box.add_child(_label("01  /  THE MOVEMENT PLAYGROUND", 13, ACCENT))
+	title_box.add_child(_label("02  /  DIVE · SLIDE · RECOVER", 13, ACCENT))
 	title_box.add_child(_label("30 Hz action study · Godot collision playground", 14, MUTED))
-	var stats := _panel(root, Vector2(-342, 26), Vector2(314, 380))
+	var stats := _panel(root, Vector2(-342, 26), Vector2(314, 404))
 	stats.anchor_left = 1.0
 	stats.anchor_right = 1.0
 	var stats_box := VBoxContainer.new()
@@ -74,15 +74,16 @@ func _ready() -> void:
 	_event.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_event.custom_minimum_size = Vector2(270, 44)
 	stats_box.add_child(_event)
-	var help := _panel(root, Vector2(28, -130), Vector2(710, 102))
+	var help := _panel(root, Vector2(28, -160), Vector2(950, 132))
 	help.anchor_top = 1.0
 	help.anchor_bottom = 1.0
 	var help_box := VBoxContainer.new()
 	help_box.add_theme_constant_override("separation", 7)
 	help.add_child(help_box)
-	help_box.add_child(_label("WASD / left stick   Move     •     SPACE / A   Jump     •     Mouse / right stick   Look", 15, PAPER))
-	help_box.add_child(_label("Reverse, then jump   Side flip     •     SHIFT then jump   Long jump     •     Impact then jump   Wall kick", 14, MUTED))
-	help_box.add_child(_label("R   Reset     F   Recenter     F1   Assists     T   Tune     ESC   Release mouse", 14, ACCENT))
+	help_box.add_child(_label("WASD / stick   Move     SPACE / A   Jump     E / X   Attack · dive     SHIFT / LT   Crouch     Mouse / stick   Look", 14, PAPER))
+	help_box.add_child(_label("Run + attack   Dive     Slide + jump / attack   Roll out     Reverse + jump   Side flip     Crouch + jump   Long jump", 14, MUTED))
+	help_box.add_child(_label("1   Basics     2   Run / dive lanes     3   Wall tower     4   Jump course     5   Slopes", 14, ACCENT))
+	help_box.add_child(_label("R   Retry station     F   Recenter     F1   Assists     T   Tune     ESC   Release mouse", 14, MUTED))
 	_build_tuning(root)
 
 
@@ -99,9 +100,16 @@ func _process(_delta: float) -> void:
 		_window.text = "SIDE FLIP READY  ·  JUMP"
 	elif core.wall_window_remaining() > 0:
 		_window.text = "WALL KICK  ·  %d TICKS LEFT" % core.wall_window_remaining()
+	elif core.action == MovementCore.Action.DIVE_SLIDE:
+		_window.text = "STEEP SLIDE · ROLL LOCKED" if core.floor_is_slippery() else "ROLL OUT  ·  JUMP / ATTACK"
+	elif core.action == MovementCore.Action.STOMACH_SLIDE_STOP:
+		_window.text = "GETTING UP"
+	elif core.action == MovementCore.Action.WALKING and core.forward_velocity >= 29.0 and core.intended_magnitude > 18.0:
+		_window.text = "DIVE READY  ·  E / X"
 	else:
 		_window.text = "WALL WINDOW CLOSED" if core.action in [MovementCore.Action.SOFT_BONK, MovementCore.Action.HARD_BONK] else ""
 	_native.text = "Tick %d  ·  action age %d\nForward %5.2f u/t  ·  up %5.2f u/t\nFacing 0x%04X  ·  animation %d" % [core.tick, core.action_ticks, core.forward_velocity, core.vertical_velocity, core.facing & 0xFFFF, core.animation_frame]
+	_native.text += "\nSurface: " + ["DEFAULT", "SLIPPERY", "VERY SLIPPERY", "NON-SLIPPERY"][core.floor_class]
 	_event.text = core.last_event if core.tick - core.event_tick < 75 else ""
 
 

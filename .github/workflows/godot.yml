@@ -11,7 +11,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 6
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Download verified Godot 4.7.2
@@ -43,6 +43,7 @@ jobs:
           paths = set(subprocess.check_output(["git", "ls-files"], text=True).splitlines())
           paths.update(str(p) for p in (root / "assets" / "character").glob("*") if p.is_file())
           paths.update(str(p) for p in (root / "test-results" / "screenshots").glob("*.png"))
+          paths.update(str(p) for p in (root / "test-results" / "parity").glob("*") if p.is_file())
           with zipfile.ZipFile("Shmovement-Godot-4.7.2.zip", "w", zipfile.ZIP_DEFLATED) as archive:
               for path in sorted(paths):
                   archive.write(path, "Shmovement/" + path)
@@ -55,3 +56,8 @@ jobs:
         with:
           name: character-and-playground-previews
           path: test-results/screenshots/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: source-parity-report
+          path: test-results/parity/

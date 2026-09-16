@@ -4,6 +4,8 @@
 *.bak
 build/
 test-results/
+__pycache__/
+*.pyc
 .DS_Store
 
 # Verified CC0 binaries are fetched once; CI bundles them in the downloadable project.

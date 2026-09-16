@@ -36,7 +36,11 @@ def main() -> int:
         if result.returncode or re.search(r"(?:SCRIPT ERROR:|(?:^|\n)ERROR:)", output):
             print(f"FAIL: {name}", file=sys.stderr)
             return 1
-    print("\nAll engine checks passed.")
+    print("\nCompiled-source differential comparison", flush=True)
+    reference = subprocess.run([sys.executable, str(project / "tools/parity/run.py"), engine, "--self-test"], cwd=project)
+    if reference.returncode:
+        return reference.returncode
+    print("\nAll engine and source-comparison checks passed.")
     return 0
 
 

@@ -1,6 +1,7 @@
-[gd_scene load_steps=99 format=3]
+[gd_scene load_steps=100 format=3]
 
 [ext_resource type="Shader" path="res://resources/grid.gdshader" id="1"]
+[ext_resource type="Script" path="res://scripts/practice_course.gd" id="2"]
 
 [sub_resource type="StandardMaterial3D" id="Concrete"]
 albedo_color = Color(0.73, 0.78, 0.73, 1)
@@ -369,6 +370,7 @@ size = Vector3(1.20000, 0.02800, 0.12000)
 material = SubResource("Orange")
 
 [node name="Room" type="Node3D"]
+script = ExtResource("2")
 
 [node name="Floor" type="StaticBody3D" parent="."]
 position = Vector3(0.00000, -0.50000, 0.00000)

@@ -1,0 +1,45 @@
+{
+  "commit": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
+  "files": [
+    {
+      "path": "src/engine/math_util.c",
+      "sha256": "9cca7513caf9831a9525ff2ea6869b1fbeab2d09731a0b18f46b81d08c6dc119"
+    },
+    {
+      "path": "include/trig_tables.inc.c",
+      "sha256": "e1e73e0df08c58796d1decb040850b9f5c9997fe78e4f2976a43ace07d51db3b"
+    },
+    {
+      "path": "include/sm64.h",
+      "sha256": "0fd0826ecdb9d22e1eb6d5b99f1479cb7f3f54bf287324efe1b59d06af7e6250"
+    },
+    {
+      "path": "include/surface_terrains.h",
+      "sha256": "109403ff5ae32b627ab08b06c4213fa475bfcfbfe1541676ed69d650565bcf1c"
+    },
+    {
+      "path": "include/mario_animation_ids.h",
+      "sha256": "45a24f2befe5b4956a04971c116cacd94b9294270fd6bc41ed202a97d1b718d9"
+    },
+    {
+      "path": "src/game/mario.c",
+      "sha256": "a16936e42951b0ecf232fbbdb50d9f596bb8f59d13cf5269e5ba9537bca9b26e"
+    },
+    {
+      "path": "src/game/mario_step.c",
+      "sha256": "db2b0acc0f6f48550b8edb8ff332b1b4635edc2359ae6e212fb7fb9a69a0ab57"
+    },
+    {
+      "path": "src/game/mario_actions_airborne.c",
+      "sha256": "09d3b62625a7bb282aab99a9b9c8b77e1da95d3474fbf28e486fd72434c2e1bc"
+    },
+    {
+      "path": "src/game/mario_actions_moving.c",
+      "sha256": "977d91f24c55912df5d90ce56bad1f304646dee8efe4266eed2ccaedd78a6d02"
+    },
+    {
+      "path": "src/game/mario_actions_object.c",
+      "sha256": "c1cc213394cf481f36012d5b86dfa710fdc7ee9dfa40613723daeab331a31d3b"
+    }
+  ]
+}

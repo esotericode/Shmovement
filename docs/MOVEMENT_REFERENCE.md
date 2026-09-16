@@ -43,6 +43,30 @@ Wall kicks initialize vertical speed **62**, enforce a **minimum** forward speed
 
 The five-tick recovery timer is decremented in [update_mario_inputs](https://github.com/n64decomp/sm64/blob/9921382a68bb0c865e5e45eb594d9c64db59b1af/src/game/mario.c) before the next action handler. It is not a sliding cooldown refreshed each frame.
 
+## Dive, belly slide and recovery
+
+[Airborne handlers](https://github.com/n64decomp/sm64/blob/9921382a68bb0c865e5e45eb594d9c64db59b1af/src/game/mario_actions_airborne.c) and [moving handlers](https://github.com/n64decomp/sm64/blob/9921382a68bb0c865e5e45eb594d9c64db59b1af/src/game/mario_actions_moving.c) define these rules.
+
+| Situation | Rule |
+| --- | --- |
+| Walking + attack | Dive if forward speed ≥29 and original stick magnitude >48 (processed intended magnitude >18); otherwise punching |
+| Single/double jump + attack | Dive only above forward speed 28; otherwise jump kick |
+| Triple/side/wall-kick/freefall + attack | Dive regardless of speed |
+| Long jump/backflip + attack | No dive cancellation |
+| Dive initialization | Add 15 forward, cap positive speed at 48; preserve vertical speed. Ground entry supplies vertical speed 20 |
+| Dive descent | Pitch decreases by 0x200 after gravity when vertical speed is negative, down to -0x2AAA |
+| Dive landing | Enter DIVE_SLIDE; retain horizontal slide velocity and continue the dive animation clock |
+| Slide + jump or attack | Forward rollout for positive forward speed, backward otherwise; blocked on a slippery slope |
+| Rollout | Vertical speed 30; normal air steering and gravity; its own landing stop |
+| Natural slide stop | Speed below 8 on a non-slope and dive animation at its end; then a non-cancellable 38-frame get-up clock |
+| Dive wall hit | Reflected backward knockback, not a fresh wall-kick window |
+
+Sliding stores a full horizontal vector separately from facing. It retains sequential X/Z steering asymmetry, slope acceleration, per-class friction, the backward-input modifier, facing adjustment and delayed stored-vector speed cap. Default/slippery/very-slippery/non-slippery classes use accelerations 7/8/10/5 and base loss factors .92/.96/.98/.92.
+
+Runtime sine values are generated mathematically and rounded to float32. Arctangent uses reference ratio-index quantization; covered air/slide operations preserve float32 rounding order. The comparator independently uses original source tables. This does not make all runtime arithmetic bit-identical.
+
+Animation timing headers: [dive](https://github.com/n64decomp/sm64/blob/9921382a68bb0c865e5e45eb594d9c64db59b1af/assets/anims/anim_88_89.inc.c), [rollout](https://github.com/n64decomp/sm64/blob/9921382a68bb0c865e5e45eb594d9c64db59b1af/assets/anims/anim_6F_70.inc.c), [get-up](https://github.com/n64decomp/sm64/blob/9921382a68bb0c865e5e45eb594d9c64db59b1af/assets/anims/anim_5A.inc.c). Visual poses remain original.
+
 ## Simulation and scale
 
 `MovementCore` contains action state, integer tick timers, native speeds, and 16-bit facing. `begin_tick` chooses and cancels actions, calculates intended motion, and initializes jumps. The adapter moves the body. `end_tick` applies gravity and resolves the contact result.
@@ -62,22 +86,26 @@ Rendering interpolates between 30 Hz physics ticks. The cosmetic rig does not fe
 
 Engine tests separately exercise real capsule contacts, chained takeoffs, room geometry, camera, controls, UI defaults, and loading the character rig. Passing either suite is not proof of the other layer's equivalence to SM64.
 
+The new [compiled-source harness](PARITY_HARNESS.md) independently compares dives, slide math, air math, attack entry and selected recovery transitions: 361 scenarios and 8,663 ticks. It uses scripted contacts and a host animation clock, so it does not establish collision or full animation-scheduler equivalence.
+
 ## Remaining parity work
 
 | Area | Current state | Required for a 1:1 claim |
 | --- | --- | --- |
 | Turnaround and wall action windows | Source-derived rules and frame-boundary tests | Differential replay against a runnable reference |
 | Collision | Godot CharacterBody3D capsule, continuous slide, floor snap | Original four quarter-steps; separate floor/ceiling/wall probes, triangle selection, radii/offsets, edge and ledge rules |
-| Numerical behavior | GDScript scalars, quantized 16-bit angles, sampled trigonometry | Original float32 operation order, atan lookup/table equivalence, position truncation/overflow rules |
+| Numerical behavior | Float32 ordering for covered air/slide math; ratio-quantized atan; original-table comparison | Extend to all actions and positions; N64 numerical edge cases |
 | Controller input | Modern radial deadzone + quadratic magnitude, camera-relative | N64 raw-axis processing and camera yaw reproduction; calibrated device mapping |
-| Slopes/sliding | Ordinary slope acceleration and flat crouch-slide friction | Surface classes, full slide-vector equations, steep-floor and downhill transitions |
+| Slopes/sliding | Four surface classes and full vector equations, source comparison and practice lanes | Automatic steep-floor/downhill transitions and original surface queries |
 | Landing/stationary actions | Basic landing chain and stop states | Complete previous-action distinctions, original stop-animation clocks and special landing branches |
-| Other moves | Normal/double/triple/long/side/wall jumps and a basic backflip | Dive, ground pound, crawling, ledge grab/climb, steep jumps, kicks, swimming and any other agreed scope |
+| Dive/recovery | Source-compared dive, belly-slide and rollout subset | Original contacts, damage/stuck/object branches; complete rollout landing behavior |
+| Combat/ground knockback | Simple punch fallback and ground-bonk recovery; jump-kick movement | Original punch sequence, complete ground-knockback friction and animation gates; these remain approximations |
+| Other moves | Normal/double/triple/long/side/wall jumps and a basic backflip | Ground pound, crawling, ledge grab/climb, steep jumps, slide kick, swimming and any other agreed scope |
 | Camera | Independent modern orbit camera | Original camera behavior if it is part of the final target |
 | Visuals | CC0 humanoid, imported locomotion, original action poses | Playtesting and animation polish; no claim of original pose fidelity |
 
 ## Next acceptance gate
 
-Build an asset-free reference harness for the agreed action/collision subset, with the NTSC build options and original numerical semantics. Feed both implementations identical processed input streams and collision triangles. Store per-tick action, previous action, position, forward/vertical velocity, facing, timers, and animation clock. Fail at the first divergence.
+The first action/math differential harness is implemented. Next, extend it to the original quarter-step collision solver and feed both implementations identical processed inputs and original test triangles. Compare resolved positions, contacts, previous action, timers and complete animation clocks in addition to current fields.
 
 Cover standing/running/tap jumps; both reversal boundaries; early/late/corner wall impacts; slope classes; ledges and ceilings; landing chains; and every newly implemented action. Set explicit tolerances for coordinates while requiring exact actions and integer timers. Only then describe covered scenarios as matching; broaden the claim as coverage grows.

@@ -103,6 +103,8 @@ func _running(speed: float) -> MovementCore:
 	var core := MovementCore.new()
 	core.action = A.WALKING
 	core.forward_velocity = speed
+	core.slide_velocity = Vector3(0, 0, -speed)
+	core.motion = core.slide_velocity
 	return core
 
 func _impact(speed: float = 24.0, normal: Vector3 = Vector3.BACK) -> MovementCore:
