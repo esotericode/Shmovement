@@ -14,7 +14,7 @@ python3 tests/validate.py /path/to/godot
 - Import and scene startup fail on script or engine errors, including errors accompanied by exit code 0.
 - CI captures rendered character poses and a room overview as a separate review artifact, then bundles a project with verified CC0 assets.
 
-Before the workspace connection failed, 54 source-rule checks, 28 earlier engine checks, and 15 earlier room checks passed locally. The additional boundary/rig checks and recovered files are validated by the latest linked GitHub Actions run. Rendered screenshots require visual review; successful capture alone is not animation-quality approval.
+All 104 checks passed in [GitHub Actions on commit 15006d2](https://github.com/esotericode/Shmovement/actions/runs/35133961071), including real-contact tick 5/tick 6 boundaries. Rendered screenshots were also captured successfully. The workspace disconnected during local visual review, so final verification uses CI. Successful capture alone is not animation-quality approval.
 
 Observed local flat-ground measurements after moving to 30 Hz:
 - Standing held jump peak: 2.4204 m (source recurrence: 2.42 m).

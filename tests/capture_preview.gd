@@ -1,5 +1,7 @@
 extends SceneTree
 ## Optional rendered review images. Run with a display, not --headless.
+var _sheet: Image = Image.create(768, 720, false, Image.FORMAT_RGB8)
+var _capture_index: int = 0
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -25,11 +27,19 @@ func _run() -> void:
 		for i in 3:
 			await process_frame
 		await _capture(player.core.action_name().to_lower())
+	_sheet.save_png("res://test-results/screenshots/contact_sheet.png")
+	if OS.get_cmdline_user_args().has("--emit-review-images"):
+		print("RENDER_REVIEW|", Marshalls.raw_to_base64(_sheet.save_png_to_buffer()))
 	quit()
 
 func _capture(name: String) -> void:
 	await RenderingServer.frame_post_draw
-	var error: Error = root.get_texture().get_image().save_png("res://test-results/screenshots/%s.png" % name)
+	var frame: Image = root.get_texture().get_image()
+	var error: Error = frame.save_png("res://test-results/screenshots/%s.png" % name)
+	frame.resize(384, 240, Image.INTERPOLATE_LANCZOS)
+	frame.convert(Image.FORMAT_RGB8)
+	_sheet.blit_rect(frame, Rect2i(0, 0, 384, 240), Vector2i((_capture_index % 2) * 384, int(_capture_index / 2) * 240))
+	_capture_index += 1
 	if error != OK:
 		push_error("Screenshot failed: " + name)
 		quit(1)

@@ -6,7 +6,7 @@ A Godot 4.7.2 movement playground working toward faithful **NTSC US Super Mario 
 
 ## Run
 
-The **Shmovement-Godot-4.7.2** artifact in a successful [GitHub Actions run](https://github.com/esotericode/Shmovement/actions) contains a ready-to-open project and the character assets. Unzip both the artifact archive and the project archive inside it, then import `project.godot` in **Godot 4.7.2 standard** and press **F6/F5** (F5 starts the playground).
+The **Shmovement-Godot-4.7.2** artifact in a successful [GitHub Actions run](https://github.com/esotericode/Shmovement/actions) contains a ready-to-open project and the character assets. Unzip both the artifact archive and the project archive inside it, then import `project.godot` in **Godot 4.7.2 standard** and press **F5**.
 
 For a source checkout, fetch the character once **before opening the project**:
 

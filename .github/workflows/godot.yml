@@ -32,7 +32,7 @@ jobs:
       - name: Capture rendered review images
         run: |
           set -euo pipefail
-          xvfb-run -a "$RUNNER_TEMP/godot" --path . --audio-driver Dummy --rendering-method gl_compatibility --script tests/capture_preview.gd 2>&1 | tee "$RUNNER_TEMP/render.log"
+          xvfb-run -a "$RUNNER_TEMP/godot" --path . --audio-driver Dummy --rendering-method gl_compatibility --script tests/capture_preview.gd -- --emit-review-images 2>&1 | tee "$RUNNER_TEMP/render.log"
           if grep -E 'SCRIPT ERROR:|^ERROR:' "$RUNNER_TEMP/render.log"; then exit 1; fi
       - name: Bundle ready-to-open project
         run: |
