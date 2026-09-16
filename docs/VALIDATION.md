@@ -1,40 +1,25 @@
-# Prototype validation
+# Validation
 
-Engine: **Godot 4.7.2 stable**, official Linux x86_64 build `ed1daf0bf`. Physics: **Godot Physics, 60 Hz**. Assists: **off**, except the dedicated assist tests.
+Runtime: official Godot 4.7.2, standard Linux x86_64, Godot Physics, 30 physics ticks/s. The headless tests render at a fixed 60 fps; that does not change the 30 Hz simulation.
 
-## Completed checks
+Run:
+```sh
+python3 tools/fetch_character.py
+python3 tests/validate.py /path/to/godot
+```
 
-- Project import and script compilation.
-- Startup of the actual playground scene.
-- **28 controller integration checks** using the real capsule and physics engine: floor contact, running, braking, analog response, reversal, tap / hold jumps, momentum retention, running-height bonus, double / triple chaining, long jumps, ceilings, wall kicks, assist toggles, respawn, and finite state.
-- **15 playground integration checks** covering the actual room: spawn, camera exclusion and wall retraction, mapped camera-relative input, tuning panel bounds and interaction, restoration of settings, ramp contact, and a successful traversal of the seven metre gap.
+- Source-derived rule suite: 54 checks. These are manually derived expectations, not recorded reference-executable traces.
+- Engine movement suite: 33 checks including real turnaround side-flip takeoff and wall-kick timing boundaries.
+- Actual playground suite: 17 checks including camera/input, ramp/gap, UI defaults, and humanoid rig import.
+- Import and scene startup fail on script or engine errors, including errors accompanied by exit code 0.
+- CI captures rendered character poses and a room overview as a separate review artifact, then bundles a project with verified CC0 assets.
 
-Use `python3 tests/validate.py /path/to/godot` to repeat the complete suite. It fails on engine error messages even if the engine happens to return exit code zero. The integration runners use `--fixed-fps 60` to advance reproducible input sequences quickly; they still execute Godot's normal physics callbacks and collision queries.
+Before the workspace connection failed, 54 source-rule checks, 28 earlier engine checks, and 15 earlier room checks passed locally. The additional boundary/rig checks and recovered files are validated by the latest linked GitHub Actions run. Rendered screenshots require visual review; successful capture alone is not animation-quality approval.
 
-## Measured baseline
+Observed local flat-ground measurements after moving to 30 Hz:
+- Standing held jump peak: 2.4204 m (source recurrence: 2.42 m).
+- Running jump peak: 3.3565 m; range: 8.4405 m.
+- Long jump peak: 2.4000 m; range: 15.8305 m.
+- Triple jump peak: 6.3002 m.
 
-Values below come from the headless controller integration runner on a flat test surface. Horizontal input is held throughout the running and long-jump cases. They describe **this prototype**, not measurements of Super Mario 64.
-
-| Measurement | Result |
-| --- | ---: |
-| Running speed | 9.60 m/s |
-| Stopping distance from running speed | 2.48 m |
-| Standing held-jump peak | 2.31 m |
-| Tap-jump peak, released after two physics ticks | 0.74 m |
-| Running held-jump peak | 3.25 m |
-| Running held-jump distance | 8.42 m |
-| Triple-jump peak | 6.13 m |
-| Long-jump peak | 2.33 m |
-| Long-jump distance | 15.59 m |
-
-The room test also verifies that a long jump from the orange runway lands on the opposite raised island. That test exposed an undersized landing island; the destination was extended while preserving the seven metre gap.
-
-## Remaining validation
-
-- Rendered visual inspection on a desktop. A graphical display could not be initialized in the development environment; the automated runs were headless. HUD layout bounds and camera collision were tested numerically, but that does not verify appearance or shader rendering.
-- Side-by-side input / trajectory comparison with the intended original-game version.
-- Human playtesting of feel, camera comfort, and jump-chain timing.
-- Physical gamepad hardware, stick calibration, and different operating systems.
-- Moving platforms, unusually steep surfaces, and combinations outside this room.
-
-The successful checks establish a working foundation. They do not establish a 1:1 match to the original game's movement or collision behavior.
+Small contact offsets come from Godot's collision margin. These measurements characterize this build and are not a claim of full SM64 parity. Remaining gaps and the differential replay gate are in [MOVEMENT_REFERENCE.md](MOVEMENT_REFERENCE.md).

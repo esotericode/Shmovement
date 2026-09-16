@@ -28,7 +28,7 @@ func _run() -> void:
 
 	_controls(Vector2(0, -1))
 	await _ticks(120)
-	_check(absf(player.forward_speed - 9.6) < 0.2, "Running reaches the configured speed")
+	_check(absf(player.forward_speed - 9.6) < 0.31, "Running follows the source oscillating target speed")
 	var stopping_start: Vector3 = player.position
 	_controls()
 	await _ticks(60)
@@ -39,13 +39,16 @@ func _run() -> void:
 	await _reset()
 	_controls(Vector2(0, -0.5))
 	await _ticks(120)
-	_check(absf(player.forward_speed - 2.4) < 0.15, "Half stick produces a controlled walk")
+	_check(absf(player.forward_speed - 2.4) < 0.31, "Half stick follows the source oscillating walk speed")
 	await _reset()
 	_controls(Vector2(0, -1))
 	await _ticks(90)
 	_controls(Vector2(0, 1))
 	await _ticks(1)
 	_check(player.braking, "Opposite input starts a skid")
+	_controls(Vector2(0, 1), true, true)
+	await _ticks(1)
+	_check(player.jump_kind == ShmovementPlayer.JumpKind.SIDE and is_equal_approx(player.core.launch_vertical, 62.0), "Turnaround jump launches the side flip in the engine")
 	await _ticks(90)
 	_check(player.velocity.z > 5.0, "Reversal completes in the requested direction")
 
@@ -89,6 +92,8 @@ func _run() -> void:
 	await _reset()
 	_controls(Vector2(0, -1))
 	await _ticks(120)
+	_controls(Vector2(0, -1), false, false, true)
+	await _ticks(1)
 	_controls(Vector2(0, -1), true, true, true)
 	await _ticks(1)
 	_check(player.jump_kind == ShmovementPlayer.JumpKind.LONG, "Crouch plus running jump launches a long jump")
@@ -108,7 +113,7 @@ func _run() -> void:
 	var wall: StaticBody3D = _solid(Vector3(0, 3, -4), Vector3(12, 6, 0.5))
 	await _reset()
 	_controls(Vector2(0, -1))
-	await _ticks(15)
+	await _ticks(9)
 	_controls(Vector2(0, -1), true, true)
 	await _ticks(1)
 	var contact: bool = false
@@ -121,6 +126,23 @@ func _run() -> void:
 	_controls(Vector2.ZERO, true, true)
 	await _ticks(1)
 	_check(player.jump_kind == ShmovementPlayer.JumpKind.WALL and player.velocity.z > 1.0, "Wall jump launches away from the surface")
+	for delay in [5, 6]:
+		await _reset()
+		_controls(Vector2(0, -1))
+		await _ticks(9)
+		_controls(Vector2(0, -1), true, true)
+		await _ticks(1)
+		contact = false
+		for index in range(60):
+			await _ticks(1)
+			if player.core.action == MovementCore.Action.AIR_HIT_WALL:
+				contact = true
+				break
+		_check(contact, "Delayed wall test reaches a qualifying impact")
+		await _ticks(delay - 1)
+		_controls(Vector2.ZERO, true, true)
+		await _ticks(1)
+		_check((player.jump_kind == ShmovementPlayer.JumpKind.WALL) == (delay == 5), "Engine wall timing boundary at tick %d" % delay)
 	wall.queue_free()
 	await _ticks(2)
 
@@ -132,7 +154,7 @@ func _run() -> void:
 			await _ticks(1)
 			if not player.is_on_floor():
 				break
-		await _ticks(2)
+		await _ticks(1)
 		_controls(Vector2(1, 0), true, true)
 		await _ticks(1)
 		_check((player.velocity.y > 0.0) == assisted, "Ledge grace follows assist setting: %s" % assisted)
@@ -148,7 +170,7 @@ func _run() -> void:
 			if not player.is_on_floor() and player.position.y < 0.18:
 				break
 		_controls(Vector2.ZERO, true, true)
-		await _ticks(7)
+		await _ticks(4)
 		_check((player.velocity.y > 0.0) == assisted, "Prelanding jump buffer follows assist setting: %s" % assisted)
 
 	player.assists_enabled = false
@@ -173,7 +195,7 @@ func _reset(at: Vector3 = Vector3(0, 0.04, 0)) -> void:
 	player.restore_defaults()
 	player.respawn(at)
 	_controls()
-	await _ticks(6)
+	await _ticks(16) # Let the spawn fall landing timer expire.
 
 
 func _controls(stick: Vector2 = Vector2.ZERO, pressed: bool = false, held: bool = false, crouch: bool = false) -> void:

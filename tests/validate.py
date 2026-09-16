@@ -17,6 +17,7 @@ def main() -> int:
     jobs = [
         ("Import", ["--editor", "--import", "--quit"]),
         ("Scene startup", ["--fixed-fps", "60", "--quit-after", "120"]),
+        ("Reference action rules", ["--script", "tests/test_reference.gd"]),
         ("Movement", ["--fixed-fps", "60", "--script", "tests/test_movement.gd"]),
         ("Playground", ["--fixed-fps", "60", "--script", "tests/test_playground.gd"]),
     ]

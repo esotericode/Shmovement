@@ -5,3 +5,9 @@
 build/
 test-results/
 .DS_Store
+
+# Verified CC0 binaries are fetched once; CI bundles them in the downloadable project.
+assets/character/*.fbx
+assets/character/*.png
+assets/character/*.import
+Shmovement-Godot-*.zip

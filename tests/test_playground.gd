@@ -19,17 +19,21 @@ func _run() -> void:
 	var hud: CanvasLayer = world.get_node("HUD")
 	await _ticks(10)
 	_check(player.is_on_floor(), "Room spawn is grounded")
+	_check(player.is_reference_profile(), "HUD initialization preserves exact reference defaults")
+	var visual: Node3D = player.get_node("Visual")
+	var skeleton: Skeleton3D = visual.get("_skeleton")
+	_check(skeleton.get_bone_count() > 20, "Detailed character loads a real humanoid rig")
 	_check(arm.get_hit_length() > 4.0, "Camera excludes the player's capsule")
 	var spawn: Vector3 = player.position
 	Input.action_press("move_forward")
-	await _ticks(60)
+	await _ticks(30)
 	Input.action_release("move_forward")
 	_check(player.position.z < spawn.z - 3.0, "Mapped forward input moves into the room")
 	player.respawn()
 	rig.rotation.y = PI / 2.0
 	await _ticks(6)
 	Input.action_press("move_forward")
-	await _ticks(45)
+	await _ticks(23)
 	Input.action_release("move_forward")
 	_check(player.position.x < spawn.x - 2.0, "Movement follows camera orientation")
 
@@ -50,7 +54,7 @@ func _run() -> void:
 	player.input_override = {"move": Vector2.ZERO, "pressed": false, "held": false, "crouch": false}
 	await _ticks(6)
 	player.input_override["move"] = Vector2(0, -1)
-	await _ticks(60)
+	await _ticks(30)
 	_check(player.is_on_floor() and player.position.y > 1.0, "Character climbs the actual room ramp")
 	var slope: float = rad_to_deg(acos(clampf(player.get_floor_normal().y, -1.0, 1.0)))
 	_check(slope > 20.0 and slope < 24.0, "Ramp is detected as a 22 degree floor")
@@ -66,7 +70,9 @@ func _run() -> void:
 	player.respawn(Vector3(13, 1.04, 12))
 	await _ticks(6)
 	player.input_override["move"] = Vector2(0, -1)
-	await _ticks(60)
+	await _ticks(25)
+	player.input_override["crouch"] = true
+	await _ticks(1)
 	player.input_override["pressed"] = true
 	player.input_override["held"] = true
 	player.input_override["crouch"] = true

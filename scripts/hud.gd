@@ -10,6 +10,9 @@ var _speed: Label
 var _state: Label
 var _assist: Label
 var _jump: Label
+var _window: Label
+var _event: Label
+var _native: Label
 var _bar: ProgressBar
 var _tuning: PanelContainer
 var _sliders: Dictionary = {}
@@ -41,8 +44,8 @@ func _ready() -> void:
 	title.add_child(title_box)
 	title_box.add_child(_label("S H M O V E M E N T", 27, PAPER))
 	title_box.add_child(_label("01  /  THE MOVEMENT PLAYGROUND", 13, ACCENT))
-	title_box.add_child(_label("Build momentum. Find your rhythm.", 14, MUTED))
-	var stats := _panel(root, Vector2(-280, 26), Vector2(252, 252))
+	title_box.add_child(_label("30 Hz action study · Godot collision playground", 14, MUTED))
+	var stats := _panel(root, Vector2(-342, 26), Vector2(314, 380))
 	stats.anchor_left = 1.0
 	stats.anchor_right = 1.0
 	var stats_box := VBoxContainer.new()
@@ -59,10 +62,18 @@ func _ready() -> void:
 	_bar.add_theme_stylebox_override("background", _style(Color("30474e"), 2, 0))
 	_bar.add_theme_stylebox_override("fill", _style(ACCENT, 2, 0))
 	stats_box.add_child(_bar)
+	_window = _label("", 16, ACCENT)
+	stats_box.add_child(_window)
+	_native = _label("", 13, MUTED)
+	stats_box.add_child(_native)
 	_jump = _label("", 15, MUTED)
 	stats_box.add_child(_jump)
 	_assist = _label("", 13, ACCENT)
 	stats_box.add_child(_assist)
+	_event = _label("", 13, PAPER)
+	_event.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_event.custom_minimum_size = Vector2(270, 44)
+	stats_box.add_child(_event)
 	var help := _panel(root, Vector2(28, -130), Vector2(710, 102))
 	help.anchor_top = 1.0
 	help.anchor_bottom = 1.0
@@ -70,7 +81,7 @@ func _ready() -> void:
 	help_box.add_theme_constant_override("separation", 7)
 	help.add_child(help_box)
 	help_box.add_child(_label("WASD / left stick   Move     •     SPACE / A   Jump     •     Mouse / right stick   Look", 15, PAPER))
-	help_box.add_child(_label("SHIFT / LT + jump   Long jump     •     Jump on landing   Chain     •     Jump at a wall   Kick", 14, MUTED))
+	help_box.add_child(_label("Reverse, then jump   Side flip     •     SHIFT then jump   Long jump     •     Impact then jump   Wall kick", 14, MUTED))
 	help_box.add_child(_label("R   Reset     F   Recenter     F1   Assists     T   Tune     ESC   Release mouse", 14, ACCENT))
 	_build_tuning(root)
 
@@ -82,7 +93,16 @@ func _process(_delta: float) -> void:
 	_state.text = _player.state_label()
 	var height: float = _player.current_jump_height if not _player.is_on_floor() else _player.last_jump_height
 	_jump.text = "Peak height     %4.2f m\nLast distance   %4.2f m\nLast airtime    %4.2f s" % [height, _player.last_jump_distance, _player.last_air_time]
-	_assist.text = "ASSISTS ON  ·  forgiving timing" if _player.assists_enabled else "ASSISTS OFF  ·  baseline timing"
+	_assist.text = "REFERENCE RULES · 30 HZ" if _player.is_reference_profile() else "EXPERIMENT · CUSTOM SETTINGS / ASSISTS"
+	var core: MovementCore = _player.core
+	if core.side_flip_available():
+		_window.text = "SIDE FLIP READY  ·  JUMP"
+	elif core.wall_window_remaining() > 0:
+		_window.text = "WALL KICK  ·  %d TICKS LEFT" % core.wall_window_remaining()
+	else:
+		_window.text = "WALL WINDOW CLOSED" if core.action in [MovementCore.Action.SOFT_BONK, MovementCore.Action.HARD_BONK] else ""
+	_native.text = "Tick %d  ·  action age %d\nForward %5.2f u/t  ·  up %5.2f u/t\nFacing 0x%04X  ·  animation %d" % [core.tick, core.action_ticks, core.forward_velocity, core.vertical_velocity, core.facing & 0xFFFF, core.animation_frame]
+	_event.text = core.last_event if core.tick - core.event_tick < 75 else ""
 
 
 func _build_tuning(root: Control) -> void:
@@ -97,8 +117,8 @@ func _build_tuning(root: Control) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	_tuning.add_child(box)
-	box.add_child(_label("MAKE IT FEEL RIGHT", 24, PAPER))
-	box.add_child(_label("Live adjustments • Reset restores the baseline", 14, MUTED))
+	box.add_child(_label("EXPERIMENT SETTINGS", 24, PAPER))
+	box.add_child(_label("Changing these leaves the reference profile", 14, MUTED))
 	for row in _rows:
 		var key: String = row[0]
 		var heading := HBoxContainer.new()
@@ -118,7 +138,7 @@ func _build_tuning(root: Control) -> void:
 		box.add_child(slider)
 		_sliders[key] = slider
 		_value_labels[key] = value_label
-		_change_setting(slider.value, key, str(row[5]))
+		value_label.text = "%.1f %s" % [float(_player.settings.get(key)), str(row[5])]
 	var reset := Button.new()
 	reset.text = "Restore baseline"
 	reset.custom_minimum_size.y = 38
@@ -147,7 +167,9 @@ func _change_setting(value: float, key: String, unit: String) -> void:
 func _reset_tuning() -> void:
 	_player.restore_defaults()
 	for key in _sliders:
-		(_sliders[key] as HSlider).value = float(_player.settings.get(key))
+		(_sliders[key] as HSlider).set_value_no_signal(float(_player.settings.get(key)))
+	for row in _rows:
+		(_value_labels[row[0]] as Label).text = "%.1f %s" % [float(_player.settings.get(row[0])), str(row[5])]
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:
