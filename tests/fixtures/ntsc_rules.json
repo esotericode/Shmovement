@@ -1,0 +1,73 @@
+{
+  "reference_commit": "9921382a68bb0c865e5e45eb594d9c64db59b1af",
+  "target": "NTSC US, ordinary terrain, no cap or held object",
+  "provenance": "Manually derived from source rules; not captured from a running reference executable.",
+  "standing_jump": {
+    "source": "mario.c:set_mario_action_airborne; mario_step.c:apply_gravity",
+    "motion_y": [
+      42,
+      38,
+      34,
+      30,
+      26,
+      22,
+      18,
+      14,
+      10,
+      6,
+      2,
+      -2
+    ],
+    "position_y": [
+      42,
+      80,
+      114,
+      144,
+      170,
+      192,
+      210,
+      224,
+      234,
+      240,
+      242,
+      240
+    ]
+  },
+  "turn_from_32": {
+    "source": "mario_actions_moving.c:act_turning_around, apply_slope_decel, act_finish_turning_around; anim_BC_BD.inc.c:header only",
+    "speeds": [
+      28,
+      24,
+      20,
+      16,
+      12,
+      8,
+      4,
+      8.913953488372092
+    ],
+    "actions": [
+      "TURNING_AROUND",
+      "TURNING_AROUND",
+      "TURNING_AROUND",
+      "TURNING_AROUND",
+      "TURNING_AROUND",
+      "TURNING_AROUND",
+      "TURNING_AROUND",
+      "FINISH_TURNING_AROUND"
+    ]
+  },
+  "wall_kick": {
+    "source": "mario_actions_airborne.c:act_air_hit_wall, check_wall_kick; mario.c:update_mario_inputs",
+    "impact_tick": 0,
+    "successful_post_impact_ticks": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "first_rejected_tick": 6,
+    "firsty_ticks": 1,
+    "note": "Original missing-return behavior re-enters AIR_HIT_WALL in one tick; bonk sets timer 5 on tick 1, later input updates decrement before checking."
+  }
+}

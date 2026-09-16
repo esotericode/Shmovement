@@ -1,0 +1,15 @@
+# Godot's generated import cache and editor state
+.godot/
+*.tmp
+*.bak
+build/
+test-results/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Verified CC0 binaries are fetched once; CI bundles them in the downloadable project.
+assets/character/*.fbx
+assets/character/*.png
+assets/character/*.import
+Shmovement-Godot-*.zip

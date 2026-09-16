@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shmovement — source comparison</title>
+<style>body{font:16px system-ui;margin:40px auto;padding:0 24px;max-width:1120px;background:#102731;color:#edf3ed}h1{font-weight:600}p{line-height:1.6}select,input{font:inherit;padding:8px;max-width:100%}label{display:inline-block;margin:10px 20px 10px 0}svg{width:100%;height:300px;background:#193741;border-radius:12px}table{width:100%;border-collapse:collapse;margin-top:20px}td,th{padding:9px;text-align:left;border-bottom:1px solid #37515b}.bad{color:#ff8c75}.good{color:#8dddbd}small{color:#b5c7c6}code{font-size:13px}#errors{white-space:pre-wrap}</style>
+<h1>Shmovement / source comparison</h1><p id="summary"></p><p id="scope"></p>
+<label>Replay <select id="scenario"></select></label><label>Plot <select id="field"></select></label>
+<svg id="plot" viewBox="0 0 1000 300" role="img" aria-label="Reference and candidate movement traces"></svg>
+<p><span style="color:#ffc572">━ Original C</span> &nbsp; <span style="color:#85d9dc">┄ Godot</span></p>
+<label>Tick <input id="tick" type="range" min="0" value="0"> <output id="tickLabel"></output></label>
+<table><thead><tr><th>Field</th><th>Original C</th><th>Godot</th><th>Difference</th></tr></thead><tbody id="rows"></tbody></table>
+<h2>First divergences</h2><pre id="errors"></pre><small id="provenance"></small>
+<script>const data=/*DATA*/;
+const $=id=>document.getElementById(id),r=data.report;
+$("summary").textContent=`${r.passed} / ${r.scenarios} scenarios pass · ${r.ticks.toLocaleString()} simulated ticks · tolerance ${r.tolerance_native_units} native units. Action IDs, angles and phases must match exactly.`;
+$("scope").textContent=r.scope;
+$("provenance").textContent=`Pinned source: n64decomp/sm64 @ ${r.reference_commit}. No game art or animation keyframes used. Inputs and both full traces accompany this report.`;
+data.expected.forEach((s,i)=>$("scenario").add(new Option(s.name,i)));
+data.fields.slice(1).forEach((f,i)=>$("field").add(new Option(f,i+1)));
+$("errors").textContent=r.errors.length?r.errors.map(e=>`${e.scenario}, tick ${e.tick}, ${e.field}: ${e.expected} → ${e.actual}`).join('\n'):'No divergences in this suite. Untested behavior is not implied to match.';
+function draw(){let i=+$("scenario").value,f=+$("field").value,a=data.expected[i].trace,b=data.actual[i].trace;
+$("tick").max=a.length-1;$("tick").value=Math.min(+$("tick").value,a.length-1);let t=+$("tick").value;$("tickLabel").textContent=t;
+let values=a.concat(b).map(x=>x[f]),lo=Math.min(...values),hi=Math.max(...values),span=hi-lo||1;
+let path=trace=>trace.map((row,j)=>`${j?'L':'M'}${30+j/Math.max(1,a.length-1)*940},${265-(row[f]-lo)/span*230}`).join(' ');
+$("plot").innerHTML=`<path d="${path(a)}" fill="none" stroke="#ffc572" stroke-width="3"/><path d="${path(b)}" fill="none" stroke="#85d9dc" stroke-width="2" stroke-dasharray="6 5"/><text x="10" y="20" fill="#edf3ed">${hi.toFixed(4)}</text><text x="10" y="290" fill="#edf3ed">${lo.toFixed(4)}</text><line x1="${30+t/Math.max(1,a.length-1)*940}" x2="${30+t/Math.max(1,a.length-1)*940}" y1="25" y2="275" stroke="#edf3ed" opacity=".4"/>`;
+$("rows").replaceChildren();data.fields.forEach((name,k)=>{let x=a[t][k],y=b[t][k],d=k?Math.abs(x-y):x===y?0:1;let tr=document.createElement('tr');[name,x,y,k?d.toPrecision(5):d?'different':'same'].forEach(v=>{let td=document.createElement('td');td.textContent=v;tr.append(td)});tr.className=d>([0,3,4,7,13].includes(k)?0:r.tolerance_native_units)?'bad':'good';$("rows").append(tr)})}
+['scenario','field','tick'].forEach(id=>$(id).oninput=draw);draw();</script></html>
