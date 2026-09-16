@@ -16,13 +16,20 @@ func _run() -> void:
 	await _capture("playground")
 	var camera := Camera3D.new()
 	world.add_child(camera)
-	camera.position = player.position + Vector3(2.7, 2.1, -4)
+	camera.position = player.position + Vector3(1.8, 1.65, -3)
 	camera.look_at(player.position + Vector3(0, 0.9, 0))
 	camera.current = true
 	player.set_physics_process(false)
 	world.get_node("HUD").hide()
+	var overlay := CanvasLayer.new()
+	world.add_child(overlay)
+	var caption := Label.new()
+	caption.position = Vector2(28, 24)
+	caption.add_theme_font_size_override("font_size", 28)
+	overlay.add_child(caption)
 	for state in [MovementCore.Action.IDLE, MovementCore.Action.TURNING_AROUND, MovementCore.Action.LONG_JUMP, MovementCore.Action.SIDE_FLIP, MovementCore.Action.WALL_KICK]:
 		player.core.action = state
+		caption.text = player.core.action_name().replace("_", " ")
 		player.core.action_ticks = 8
 		for i in 3:
 			await process_frame

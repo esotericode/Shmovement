@@ -26,6 +26,7 @@ func _ready() -> void:
 	_model = MODEL.instantiate()
 	_model.position.y = -0.9
 	_model.scale = Vector3(0.54, 0.478, 0.54)
+	_model.rotation.y = PI # Kenney faces +Z; the movement core faces -Z.
 	_pivot.add_child(_model)
 	_skeleton = _model.get_node("Root/Skeleton3D")
 	var material := StandardMaterial3D.new()
@@ -147,5 +148,5 @@ func _bend(name: String, axis: Vector3, degrees: float) -> void:
 	var parent: int = _skeleton.get_bone_parent(bone)
 	var basis: Basis = _skeleton.get_bone_global_pose(parent).basis.orthonormalized() if parent >= 0 else Basis.IDENTITY
 	var local_axis: Vector3 = (basis.inverse() * axis).normalized()
-	var delta_rotation := Quaternion(local_axis, deg_to_rad(degrees))
+	var delta_rotation := Quaternion(local_axis, deg_to_rad(-degrees))
 	_skeleton.set_bone_pose_rotation(bone, delta_rotation * _skeleton.get_bone_pose_rotation(bone))
